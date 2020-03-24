@@ -10,7 +10,7 @@ import io.cosmos.types.Fee;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
-
+@SuppressWarnings("rawtypes")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonPropertyOrder(alphabetic = true)
 public class Data2Sign {

@@ -1,16 +1,5 @@
 package io.cosmos.crypto;
 
-import com.google.common.base.Splitter;
-import io.cosmos.common.Constants;
-import io.cosmos.common.EnvInstance;
-import io.cosmos.util.AddressUtil;
-import org.bitcoinj.core.ECKey;
-import org.bitcoinj.core.Sha256Hash;
-import org.bitcoinj.core.Utils;
-import org.bitcoinj.crypto.*;
-import org.bouncycastle.util.encoders.DecoderException;
-import org.bouncycastle.util.encoders.Hex;
-
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -18,123 +7,306 @@ import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.List;
 
+import org.bitcoinj.core.ECKey;
+import org.bitcoinj.core.Sha256Hash;
+import org.bitcoinj.core.Utils;
+import org.bitcoinj.crypto.ChildNumber;
+import org.bitcoinj.crypto.DeterministicKey;
+import org.bitcoinj.crypto.HDKeyDerivation;
+import org.bitcoinj.crypto.HDUtils;
+import org.bitcoinj.crypto.MnemonicCode;
+import org.bitcoinj.crypto.MnemonicException;
+import org.bitcoinj.wallet.DeterministicSeed;
+import org.bitcoinj.wallet.UnreadableWalletException;
+import org.bouncycastle.util.encoders.DecoderException;
+import org.bouncycastle.util.encoders.Hex;
+
+import io.cosmos.common.Constants;
+import io.cosmos.common.EnvInstance;
+import io.cosmos.crypto.encode.ConvertBits;
+import io.cosmos.util.AddressUtil;
 
 public class Crypto {
 
-    public static byte[] sign(byte[] msg, String privateKey) throws NoSuchAlgorithmException {
-        ECKey k = ECKey.fromPrivate(new BigInteger(privateKey, 16));
+	private static final byte[] SEED = null;
+	private static final Long CREATIONTIMESECONDS = 0L;
 
-        return sign(msg, k);
-    }
+	/**
+	 * 签名
+	 * 
+	 * @param msg
+	 * @param privateKey
+	 * @return
+	 * @throws NoSuchAlgorithmException
+	 */
+	public static byte[] sign(byte[] msg, String privateKey) throws NoSuchAlgorithmException {
+		ECKey k = ECKey.fromPrivate(new BigInteger(privateKey, 16));
+		return sign(msg, k);
+	}
 
-    public static byte[] sign(byte[] msg, ECKey k) throws NoSuchAlgorithmException {
+	/**
+	 * 签名
+	 * 
+	 * @param msg
+	 * @param k
+	 * @return
+	 * @throws NoSuchAlgorithmException
+	 */
+	public static byte[] sign(byte[] msg, ECKey k) throws NoSuchAlgorithmException {
 
-        MessageDigest digest = MessageDigest.getInstance("SHA-256");
-        byte[] msgHash = digest.digest(msg);
+		MessageDigest digest = MessageDigest.getInstance("SHA-256");
+		byte[] msgHash = digest.digest(msg);
 
-        ECKey.ECDSASignature signature = k.sign(Sha256Hash.wrap(msgHash));
+		ECKey.ECDSASignature signature = k.sign(Sha256Hash.wrap(msgHash));
 
-        byte[] result = new byte[64];
-        System.arraycopy(Utils.bigIntegerToBytes(signature.r, 32), 0, result, 0, 32);
-        System.arraycopy(Utils.bigIntegerToBytes(signature.s, 32), 0, result, 32, 32);
-        return result;
-    }
+		byte[] result = new byte[64];
+		System.arraycopy(Utils.bigIntegerToBytes(signature.r, 32), 0, result, 0, 32);
+		System.arraycopy(Utils.bigIntegerToBytes(signature.s, 32), 0, result, 32, 32);
+		return result;
+	}
 
-    public static String generatePrivateKey() {
-        SecureRandom csprng = new SecureRandom();
-        byte[] randomBytes = new byte[32];
-        csprng.nextBytes(randomBytes);
-        return Hex.toHexString(randomBytes);
-    }
+	/**
+	 * 随机生成私钥
+	 * 
+	 * @return
+	 */
+	public static String generatePrivateKey() {
+		SecureRandom csprng = new SecureRandom();
+		byte[] randomBytes = new byte[32];
+		csprng.nextBytes(randomBytes);
+		return Hex.toHexString(randomBytes);
+	}
 
-    public static String generatePubKeyHexFromPriv(String privateKey) {
-        ECKey k = ECKey.fromPrivate(new BigInteger(privateKey, 16));
-        return k.getPublicKeyAsHex();
-    }
+	/**
+	 * 私钥派生公钥
+	 * 
+	 * @param privateKey
+	 *            私钥
+	 * @return
+	 */
+	public static String generatePubKeyHexFromPriv(String privateKey) {
+		ECKey k = ECKey.fromPrivate(new BigInteger(privateKey, 16));
+		return k.getPublicKeyAsHex();
+	}
 
-    public static String generateMnemonic() {
-        byte[] entrophy = new byte[128/4];
-        new SecureRandom().nextBytes(entrophy);
-        try {
-            return Utils.join(MnemonicCode.INSTANCE.toMnemonic(entrophy));
-        } catch (MnemonicException.MnemonicLengthException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
+	/**
+	 * 随机生成助记码
+	 * 
+	 * @return
+	 */
+	public static String generateMnemonic() {
+		byte[] entrophy = new byte[128 / 4];
+		new SecureRandom().nextBytes(entrophy);
+		try {
+			List<String> parts = MnemonicCode.INSTANCE.toMnemonic(entrophy);
+			return Utils.SPACE_JOINER.join(parts);
+		} catch (MnemonicException.MnemonicLengthException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
 
-    public static String generatePrivateKeyFromMnemonic(String mnemonic) {
-        List<String> words = Splitter.on(" ").splitToList(mnemonic);
-        byte[] seed = MnemonicCode.INSTANCE.toSeed(words, "");
-        DeterministicKey key = HDKeyDerivation.createMasterPrivateKey(seed);
+	/**
+	 * 获取私钥
+	 * 
+	 * @param mnemonic
+	 *            助记码
+	 * @param passphrase
+	 *            密码
+	 * @return
+	 */
+	public static String generatePrivateKeyFromMnemonic(String mnemonic, String passphrase) {
+		DeterministicSeed deterministicSeed = null;
+		DeterministicKey key = null;
+		List<ChildNumber> childNumbers = null;
+		try {
+			deterministicSeed = new DeterministicSeed(mnemonic, SEED, passphrase, CREATIONTIMESECONDS);
+		} catch (UnreadableWalletException e) {
+			e.printStackTrace();
+			return null;
+		}
+		key = HDKeyDerivation.createMasterPrivateKey(deterministicSeed.getSeedBytes());
 
-        List<ChildNumber> childNumbers = HDUtils.parsePath(EnvInstance.getEnv().GetHDPath());
-        for (ChildNumber cn : childNumbers) {
-            key = HDKeyDerivation.deriveChildKey(key, cn);
-        }
-        return key.getPrivateKeyAsHex();
-    }
+		childNumbers = HDUtils.parsePath(EnvInstance.getEnv().GetHDPath());
+		for (ChildNumber cn : childNumbers) {
+			key = HDKeyDerivation.deriveChildKey(key, cn);
+		}
+		return key.getPrivateKeyAsHex();
+	}
 
-    public static boolean validateSig(byte[] msg, byte[] pubKey, byte[] sig) throws NoSuchAlgorithmException {
-        MessageDigest digest = MessageDigest.getInstance("SHA-256");
-        byte[] msgHash = digest.digest(msg);
+	public static boolean validateSig(byte[] msg, byte[] pubKey, byte[] sig) throws NoSuchAlgorithmException {
+		MessageDigest digest = MessageDigest.getInstance("SHA-256");
+		byte[] msgHash = digest.digest(msg);
 
-        byte[] buf = new byte[32];
-        System.arraycopy(sig, 0, buf, 0, 32);
-        BigInteger r = new BigInteger(1, buf);
-        System.arraycopy(sig, 32, buf, 0, 32);
-        BigInteger s = new BigInteger(1, buf);
-        ECKey.ECDSASignature signature = new ECKey.ECDSASignature(r, s);
-        return ECKey.verify(msgHash, signature, pubKey);
-    }
+		byte[] buf = new byte[32];
+		System.arraycopy(sig, 0, buf, 0, 32);
+		BigInteger r = new BigInteger(1, buf);
+		System.arraycopy(sig, 32, buf, 0, 32);
+		BigInteger s = new BigInteger(1, buf);
+		ECKey.ECDSASignature signature = new ECKey.ECDSASignature(r, s);
+		return ECKey.verify(msgHash, signature, pubKey);
+	}
 
-    public static boolean validateSig(byte[] msg, String pubKey, String sig) throws NoSuchAlgorithmException {
-        return validateSig(msg, Base64.getDecoder().decode(pubKey), Base64.getDecoder().decode(sig));
-    }
+	public static boolean validateSig(byte[] msg, String pubKey, String sig) throws NoSuchAlgorithmException {
+		return validateSig(msg, Base64.getDecoder().decode(pubKey), Base64.getDecoder().decode(sig));
+	}
+    
+	public static byte[] generatePubKeyFromPriv(String privateKey) {
+		ECKey k = ECKey.fromPrivate(new BigInteger(privateKey, 16));
+		return k.getPubKey();
+	}
 
-    public static byte[] generatePubKeyFromPriv(String privateKey) {
-        ECKey k = ECKey.fromPrivate(new BigInteger(privateKey, 16));
-        return k.getPubKey();
-    }
+	/**
+	 * 私钥获取 account 地址
+	 * 
+	 * @param privateKey
+	 *            私钥
+	 * @return
+	 */
+	public static String generateAccountAddressFromPriv(String privateKey) {
+		String pub = generatePubKeyHexFromPriv(privateKey);
+		return generateAccountAddressFromPub(pub);
+	}
 
-    public static String generateAddressFromPriv(String privateKey) {
-        String pub = generatePubKeyHexFromPriv(privateKey);
-        return generateAddressFromPub(pub);
-    }
+	/**
+	 * 私钥获取 consensus 地址
+	 * 
+	 * @param privateKey
+	 *            私钥
+	 * @return
+	 */
+	public static String generateConsensusAddressFromPriv(String privateKey) {
+		String pub = generatePubKeyHexFromPriv(privateKey);
+		return generateConsensusAddressFromPub(pub);
+	}
 
-    public static String generateAddressFromPub(String pubKey) {
-        try {
-            String addr = AddressUtil.createNewAddressSecp256k1(EnvInstance.getEnv().GetMainPrefix(), Hex.decode(pubKey));
-            return addr;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "";
-        }
-    }
+	/**
+	 * 私钥获取 validator 地址
+	 * 
+	 * @param privateKey
+	 *            私钥
+	 * @return
+	 */
+	public static String generateValidatorAddressFromPriv(String privateKey) {
+		String pub = generatePubKeyHexFromPriv(privateKey);
+		return generateValidatorAddressFromPub(pub);
+	}
 
-    public static boolean validPubKey(String pubKey) {
-        if (pubKey == null || pubKey.length() != 66) {
-            return false;
-        }
-        try {
-            Hex.decode(pubKey);
-        } catch (DecoderException e) {
-            e.printStackTrace();
-            return false;
-        }
-        return true;
-    }
+	public static boolean validPubKey(String pubKey) {
+		if (pubKey == null || pubKey.length() != 66) {
+			return false;
+		}
+		try {
+			Hex.decode(pubKey);
+		} catch (DecoderException e) {
+			e.printStackTrace();
+			return false;
+		}
+		return true;
+	}
 
+	/**
+	 * 公钥获取Consensus 地址
+	 * 
+	 * @param pubKey
+	 *            公钥
+	 * @return
+	 */
+	public static String generateConsensusAddressFromPub(String pubKey) {
 
-    public static String generateValidatorAddressFromPub(String pubKey) {
+		try {
+			String addr = AddressUtil.createNewAddressSecp256k1(EnvInstance.getEnv().GetConsensusAddrPrefix(),
+					Hex.decode(pubKey));
+			return addr;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return "";
+		}
+	}
 
-        try {
-            String addr = AddressUtil.createNewAddressSecp256k1(EnvInstance.getEnv().GetValidatorAddrPrefix(), Hex.decode(pubKey));
-            return addr;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "";
-        }
-    }
+	/**
+	 * 公钥获取Validator 地址
+	 * 
+	 * @param pubKey
+	 *            公钥
+	 * @return
+	 */
+	public static String generateValidatorAddressFromPub(String pubKey) {
+
+		try {
+			String addr = AddressUtil.createNewAddressSecp256k1(EnvInstance.getEnv().GetValidatorAddrPrefix(),
+					Hex.decode(pubKey));
+			return addr;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return "";
+		}
+	}
+
+	/**
+	 * 公钥获取account 地址
+	 * 
+	 * @param pubKey
+	 *            公钥
+	 * @return
+	 */
+	public static String generateAccountAddressFromPub(String pubKey) {
+
+		try {
+			String addr = AddressUtil.createNewAddressSecp256k1(EnvInstance.getEnv().GetAccountAddrPrefix(),
+					Hex.decode(pubKey));
+			return addr;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return "";
+		}
+	}
+
+	public static String generatePubkeyBech32FromPubKey(String pubkeyType, String pubKey) {
+		String bech32Pubkey = "";
+		try {
+			System.out.println("dddddddddd" + Utils.HEX.decode(pubKey));
+			System.out.println("dddddddddd" + Utils.HEX.decode(pubKey).length);
+			byte[] pubkeyByte = ConvertBits.convertBits(Utils.HEX.decode(pubKey), 0, Utils.HEX.decode(pubKey).length, 8,
+					5, true);
+
+			String bech32PubkeyPrefix = Constants.Bech32PrefixAccAddr;
+			if (Constants.Bech32PubKeyTypeAccPub.equals(pubkeyType)) {
+				bech32PubkeyPrefix = Constants.Bech32PrefixAccPub;
+			} else if (Constants.Bech32PubKeyTypeValPub.equals(pubkeyType)) {
+				bech32PubkeyPrefix = Constants.Bech32PrefixValPub;
+			} else if (Constants.Bech32PubKeyTypeConsPub.equals(pubkeyType)) {
+				bech32PubkeyPrefix = Constants.Bech32PrefixConsPub;
+			}
+
+			bech32Pubkey = io.cosmos.crypto.encode.Bech32.encode(bech32PubkeyPrefix, pubkeyByte);
+			return bech32Pubkey;
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			return "";
+		}
+	}
+
+	public static String generatePubkeyBech32FromPubKey(String pubkeyType, byte[] publickKey) {
+		String bech32Pubkey = "";
+		try {
+			String bech32PubkeyPrefix = Constants.Bech32PrefixAccAddr;
+			if (Constants.Bech32PubKeyTypeAccPub.equals(pubkeyType)) {
+				bech32PubkeyPrefix = Constants.Bech32PrefixAccPub;
+			} else if (Constants.Bech32PubKeyTypeValPub.equals(pubkeyType)) {
+				bech32PubkeyPrefix = Constants.Bech32PrefixValPub;
+			} else if (Constants.Bech32PubKeyTypeConsPub.equals(pubkeyType)) {
+				bech32PubkeyPrefix = Constants.Bech32PrefixConsPub;
+			}
+
+			bech32Pubkey = io.cosmos.crypto.encode.Bech32.encode(bech32PubkeyPrefix, publickKey);
+			return bech32Pubkey;
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			return "";
+		}
+	}
 
 }

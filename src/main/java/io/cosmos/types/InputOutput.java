@@ -11,30 +11,28 @@ import java.util.List;
 @JsonPropertyOrder(alphabetic = true)
 public class InputOutput {
 
-    private String address;
-    private List<Token> coins;
+	private String address;
+	private List<Token> coins;
 
-    public String getAddress() {
-        return address;
-    }
+	public String getAddress() {
+		return address;
+	}
 
-    public void setAddress(String address) {
-        this.address = address;
-    }
+	public void setAddress(String address) {
+		this.address = address;
+	}
 
-    public List<Token> getCoins() {
-        return coins;
-    }
+	public List<Token> getCoins() {
+		return coins;
+	}
 
-    public void setCoins(List<Token> coins) {
-        this.coins = coins;
-    }
+	public void setCoins(List<Token> coins) {
+		this.coins = coins;
+	}
 
-    @Override
-    public String toString() {
-        return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
-            .append("address", address)
-            .append("coins", coins)
-            .toString();
-    }
+	@Override
+	public String toString() {
+		return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE).append("address", address)
+				.append("coins", coins).toString();
+	}
 }

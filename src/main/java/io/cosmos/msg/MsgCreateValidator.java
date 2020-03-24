@@ -1,5 +1,6 @@
 package io.cosmos.msg;
 
+import io.cosmos.common.Constants;
 import io.cosmos.common.EnvInstance;
 import io.cosmos.msg.utils.Message;
 import io.cosmos.msg.utils.type.MsgCreateValidatorValue;
@@ -7,10 +8,7 @@ import io.cosmos.types.CommissionMsg;
 import io.cosmos.types.Description;
 import io.cosmos.types.Token;
 
-import java.util.ArrayList;
-import java.util.List;
-
-
+@SuppressWarnings("rawtypes")
 public class MsgCreateValidator extends MsgBase{
 
     public static void main(String[] args) {
@@ -19,13 +17,13 @@ public class MsgCreateValidator extends MsgBase{
         msg.setMsgType("cosmos-sdk/MsgCreateValidator");
         msg.initMnemonic(EnvInstance.getEnv().GetNode5Mnmonic());
         Message messages = msg.produceMsg();
-        msg.submit(messages, "10"+"000000000", "200000", "");
+        msg.submit(messages, "10"+"000000000", Constants.COSMOS_DEFAULT_GAS, "","");
     }
 
     public Message produceMsg() {
         MsgCreateValidatorValue value = new MsgCreateValidatorValue();
-        value.setDelegatorAddress(this.address);
-        value.setValidatorAddress(this.operAddress);
+        value.setDelegatorAddress(this.accountAddress);
+        value.setValidatorAddress(this.validatorAddress);
         value.setPubKey(EnvInstance.getEnv().GetTendermintConsensusPubkey());
 
         Description d = new Description();
@@ -48,7 +46,7 @@ public class MsgCreateValidator extends MsgBase{
         value.setDescription(d);
         value.setMinSelfDelegation("1" + "000000000");
 
-        Message<MsgCreateValidatorValue> msg = new Message<>();
+        Message<MsgCreateValidatorValue> msg = new Message<MsgCreateValidatorValue>();
         msg.setType(msgType);
         msg.setValue(value);
         return msg;

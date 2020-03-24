@@ -1,5 +1,6 @@
 package io.cosmos.msg;
 
+import io.cosmos.common.Constants;
 import io.cosmos.common.EnvInstance;
 import io.cosmos.msg.utils.Message;
 import io.cosmos.msg.utils.type.MsgCreateOKValidatorValue;
@@ -7,10 +8,7 @@ import io.cosmos.types.CommissionMsg;
 import io.cosmos.types.Description;
 import io.cosmos.types.Token;
 
-import java.util.ArrayList;
-import java.util.List;
-
-
+@SuppressWarnings("rawtypes")
 public class MsgCreateOKValidator extends MsgBase{
 
     public static void main(String[] args) {
@@ -19,14 +17,14 @@ public class MsgCreateOKValidator extends MsgBase{
         msg.setMsgType("cosmos-sdk/MsgCreateValidator");
         msg.initMnemonic(EnvInstance.getEnv().GetNode0Mnmonic());
         Message messages = msg.produceMsg();
-        msg.submit(messages, "6", "200000", "");
+        msg.submit(messages, "6", Constants.COSMOS_DEFAULT_GAS, "","");
     }
 
     public Message produceMsg() {
         MsgCreateOKValidatorValue value = new MsgCreateOKValidatorValue();
 
-        value.setDelegatorAddress(this.address);
-        value.setValidatorAddress(this.operAddress);
+        value.setDelegatorAddress(this.accountAddress);
+        value.setValidatorAddress(this.validatorAddress);
         value.setPubKey("okchainvalconspub1zcjduepqwfr8lelpqerf8xyc63vqtje0wvhd68h7uce6ludygc28uj5hc9ushev2kp");
 
         Description d = new Description();
@@ -49,7 +47,7 @@ public class MsgCreateOKValidator extends MsgBase{
         value.setMinSelfDelegation(t);
 
 
-        Message<MsgCreateOKValidatorValue> msg = new Message<>();
+        Message<MsgCreateOKValidatorValue> msg = new Message<MsgCreateOKValidatorValue>();
         msg.setType(msgType);
         msg.setValue(value);
         return msg;

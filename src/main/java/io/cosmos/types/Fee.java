@@ -11,31 +11,29 @@ import java.util.List;
 @JsonPropertyOrder(alphabetic = true)
 public class Fee {
 
-    private List<Token> amount;
+	private List<Token> amount;
 
-    private String gas;
+	private String gas;
 
-    public List<Token> getAmount() {
-        return amount;
-    }
+	public List<Token> getAmount() {
+		return amount;
+	}
 
-    public String getGas() {
-        return gas;
-    }
+	public String getGas() {
+		return gas;
+	}
 
-    public void setAmount(List<Token> amount) {
-        this.amount = amount;
-    }
+	public void setAmount(List<Token> amount) {
+		this.amount = amount;
+	}
 
-    public void setGas(String gas) {
-        this.gas = gas;
-    }
+	public void setGas(String gas) {
+		this.gas = gas;
+	}
 
-    @Override
-    public String toString() {
-        return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
-            .append("amount", amount)
-            .append("gas", gas)
-            .toString();
-    }
+	@Override
+	public String toString() {
+		return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE).append("amount", amount).append("gas", gas)
+				.toString();
+	}
 }

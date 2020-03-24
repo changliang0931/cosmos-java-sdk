@@ -1,7 +1,16 @@
 package io.cosmos.msg;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.lang3.StringUtils;
+import org.bouncycastle.util.Strings;
+import org.bouncycastle.util.encoders.Base64;
+import org.bouncycastle.util.encoders.Hex;
+
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+
 import io.cosmos.common.Constants;
 import io.cosmos.common.EnvInstance;
 import io.cosmos.common.HttpUtils;
@@ -16,221 +25,372 @@ import io.cosmos.types.Pubkey;
 import io.cosmos.types.Signature;
 import io.cosmos.types.Token;
 import io.cosmos.util.EncodeUtils;
-import org.bouncycastle.util.Strings;
-import org.bouncycastle.util.encoders.Base64;
-import org.bouncycastle.util.encoders.Hex;
 
-import java.util.ArrayList;
-import java.util.List;
-
+@SuppressWarnings("rawtypes")
 public class MsgBase {
 
-    protected String restServerUrl = EnvInstance.getEnv().GetRestServerUrl();
+	protected String restServerUrl = EnvInstance.getEnv().GetRestServerUrl();
+	protected String sequenceNum;
+	protected String accountNum;
+	protected String pubKeyString;
+	protected String accountAddress;
+	protected String consensusAddress;
+	protected String validatorAddress;
+	protected String priKeyString;
+	protected String msgType;
 
-    protected String sequenceNum;
-    protected String accountNum;
-    protected String pubKeyString;
-    protected String address;
-    protected String operAddress;
-    protected String priKeyString;
+	/**
+	 * 设置消息类型
+	 * 
+	 * @param type
+	 *            codec.go 中注册的消息类型
+	 */
+	public void setMsgType(String type) {
+		this.msgType = type;
+	}
 
-    static protected String msgType;
+	static Signature sign(Data2Sign obj, String privateKey) throws Exception {
+		String sigResult = null;
+		Signature signature = null;
+		Pubkey pubkey = null;
+		sigResult = obj2byteok(obj, privateKey);
+		// sigResult = obj2byte(obj, privateKey);
+		signature = new Signature();
+		pubkey = new Pubkey();
+		pubkey.setType(Constants.COSMOS_PUBKEY_TYPE);
+		pubkey.setValue(Strings.fromByteArray(Base64.encode(Hex.decode(Crypto.generatePubKeyHexFromPriv(privateKey)))));
+		signature.setPubkey(pubkey);
+		signature.setSignature(sigResult);
 
-    public void setMsgType(String type) {
-        this.msgType = type;
-    }
+		System.out.println("privateKey: ");
+		System.out.println(privateKey);
 
-    static Signature sign(Data2Sign obj, String privateKey) throws Exception {
-        String sigResult = null;
-//        String sigResult = obj2byteok(obj, privateKey);
-        sigResult = obj2byte(obj, privateKey);
+		System.out.println("signature: ");
+		System.out.println(sigResult);
 
-        Signature signature = new Signature();
-        Pubkey pubkey = new Pubkey();
-        pubkey.setType("tendermint/PubKeySecp256k1");
-        pubkey.setValue(Strings.fromByteArray(Base64.encode(Hex.decode(Crypto.generatePubKeyHexFromPriv(privateKey)))));
-        signature.setPubkey(pubkey);
-        signature.setSignature(sigResult);
+		return signature;
+	}
 
-        System.out.println("privateKey: ");
-        System.out.println(privateKey);
+	static String obj2byte(Data2Sign data, String privateKey) {
 
-        System.out.println("signature: ");
-        System.out.println(sigResult);
+		String sigResult = null;
+		try {
+			// System.out.println("===============Utils.serializer.toJson=================");
 
-        return signature;
-    }
+			System.out.println("row data:");
+			System.out.println(data);
+			System.out.println("json data:");
 
+			String signDataJson = Utils.serializer.toJson(data);
+			System.out.println(signDataJson);
 
+			// 序列化
+			byte[] byteSignData = signDataJson.getBytes();
 
-    static String obj2byte(Data2Sign data, String privateKey) {
+			System.out.println("byte data length:");
+			System.out.println(byteSignData.length);
 
-        String sigResult = null;
-        try {
-//            System.out.println("===============Utils.serializer.toJson=================");
+			byte[] sig = Crypto.sign(byteSignData, privateKey);
+			sigResult = Strings.fromByteArray(Base64.encode(sig));
 
-            System.out.println("row data:");
-            System.out.println(data);
-            System.out.println("json data:");
+			System.out.println("result:");
+			System.out.println(sigResult);
+			// System.out.println("================================");
 
-            String signDataJson = Utils.serializer.toJson(data);
-            System.out.println(signDataJson);
+		} catch (Exception e) {
+			System.out.println("serialize msg failed");
+		}
+		return sigResult;
+	}
 
-            //序列化
-            byte[] byteSignData = signDataJson.getBytes();
+	static String obj2byteok(Data2Sign data, String privateKey) {
+		byte[] byteSignData = null;
+		String sigResult = null;
+		byte[] tmp = null;
+		byte[] sig = null;
+		try {
 
-            System.out.println("byte data length:");
-            System.out.println(byteSignData.length);
+			System.out.println("===============EncodeUtils=================");
+			System.out.println("row data:");
+			System.out.println(data);
+			System.out.println("json data:");
+			System.out.println(EncodeUtils.toJsonStringSortKeys(data));
 
+			tmp = EncodeUtils.toJsonEncodeBytes(data);
+			byteSignData = EncodeUtils.hexStringToByteArray(EncodeUtils.bytesToHex(tmp));
 
-            byte[] sig = Crypto.sign(byteSignData, privateKey);
-            sigResult = Strings.fromByteArray(Base64.encode(sig));
+			System.out.println("byte data length:");
+			System.out.println(byteSignData.length);
 
-            System.out.println("result:");
-            System.out.println(sigResult);
-//            System.out.println("================================");
+			sig = Crypto.sign(byteSignData, privateKey);
+			sigResult = Strings.fromByteArray(Base64.encode(sig));
 
-        } catch (Exception e) {
-            System.out.println("serialize msg failed");
-        }
-        return sigResult;
-    }
+			System.out.println("result:");
+			System.out.println(sigResult);
+			System.out.println("================================");
 
-    static String obj2byteok(Data2Sign data, String privateKey) {
-        byte[] byteSignData = null;
-        String sigResult = null;
-        try {
+		} catch (Exception e) {
+			System.out.println("serialize msg failed");
+		}
 
-            System.out.println("===============EncodeUtils=================");
-            System.out.println("row data:");
-            System.out.println(data);
-            System.out.println("json data:");
-            System.out.println(EncodeUtils.toJsonStringSortKeys(data));
+		return sigResult;
+	}
 
-            byte[] tmp = EncodeUtils.toJsonEncodeBytes(data);
-            byteSignData = EncodeUtils.hexStringToByteArray(EncodeUtils.bytesToHex(tmp));
+	/**
+	 * 获取签名交易
+	 * 
+	 * @param message
+	 *            msg
+	 * @param feeAmount
+	 *            转账金额
+	 * @param gas
+	 *            默认200000
+	 * @param memo
+	 *            备注
+	 * @param mode
+	 *            "block" after tx commit ;"sync" after CheckTx ; "async" right
+	 *            away ;
+	 * @return
+	 */
+	public String getSignTx(Message message, String feeAmount, String gas, String memo, String mode) {
+		List<Token> amountList = null;
+		Token amount = null;
+		Fee fee = null;
+		Message[] msgs = null;
+		Data2Sign data = null;
+		Signature signature = null;
+		BoardcastTx cosmosTransaction = null;
+		TxValue cosmosTx = null;
+		List<Signature> signatureList = null;
+		try {
+			amountList = new ArrayList<Token>();
+			if (feeAmount.length() > 0) {
+				amount = new Token();
+				amount.setDenom(EnvInstance.getEnv().GetDenom());
+				amount.setAmount(feeAmount);
+				amountList.add(amount);
+			}
 
-            System.out.println("byte data length:");
-            System.out.println(byteSignData.length);
+			// 组装待签名交易结构
+			fee = new Fee();
+			fee.setAmount(amountList);
+			fee.setGas(gas);
 
-            byte[] sig = Crypto.sign(byteSignData, privateKey);
-            sigResult = Strings.fromByteArray(Base64.encode(sig));
+			msgs = new Message[1];
+			msgs[0] = message;
 
-            System.out.println("result:");
-            System.out.println(sigResult);
-            System.out.println("================================");
+			data = new Data2Sign(accountNum, EnvInstance.getEnv().GetChainid(), fee, memo, msgs, sequenceNum);
 
-        } catch (Exception e) {
-            System.out.println("serialize msg failed");
-        }
+			signature = MsgBase.sign(data, priKeyString);
 
-        return sigResult;
-    }
+			cosmosTransaction = new BoardcastTx();
 
-    public void submit(Message message,
-                       String feeAmount,
-                       String gas,
-                       String memo) {
-        try {
-            List<Token> amountList = new ArrayList<>();
-            Token amount = new Token();
-            amount.setDenom(EnvInstance.getEnv().GetDenom());
-            amount.setAmount(feeAmount);
-            amountList.add(amount);
+			if (StringUtils.isBlank(mode)) {
+				cosmosTransaction.setMode(EnvInstance.getEnv().GetTxModeBlock());
+			}
 
-            //组装待签名交易结构
-            Fee fee = new Fee();
-            fee.setAmount(amountList);
-            fee.setGas(gas);
+			cosmosTx = new TxValue();
 
+			cosmosTx.setType(EnvInstance.getEnv().GetTxTypeStdTx());
 
-            Message[] msgs = new Message[1];
-            msgs[0] = message;
+			cosmosTx.setMsgs(msgs);
 
-            Data2Sign data = new Data2Sign(accountNum, EnvInstance.getEnv().GetChainid(), fee, memo, msgs, sequenceNum);
+			if (EnvInstance.getEnv().HasFee()) {
+				cosmosTx.setFee(fee);
+			}
 
-            Signature signature = MsgBase.sign(data, priKeyString);
+			cosmosTx.setMemo(memo);
 
-            BoardcastTx cosmosTransaction = new BoardcastTx();
-            cosmosTransaction.setMode("block");
+			signatureList = new ArrayList<Signature>();
+			signatureList.add(signature);
+			cosmosTx.setSignatures(signatureList);
 
-            TxValue cosmosTx = new TxValue();
-            cosmosTx.setType("auth/StdTx");
-            cosmosTx.setMsgs(msgs);
+			cosmosTransaction.setTx(cosmosTx);
+			return cosmosTransaction.toJson();
+		} catch (Exception e) {
+			System.out.println("serialize transfer msg failed");
+		}
+		return "";
+	}
 
-            if (EnvInstance.getEnv().HasFee()) {
-                cosmosTx.setFee(fee);
-            }
+	/**
+	 * 签名并发送交易
+	 * 
+	 * @param message
+	 *            msg
+	 * @param feeAmount
+	 *            转账金额
+	 * @param gas
+	 *            默认200000
+	 * @param memo
+	 *            备注
+	 * @param mode
+	 *            "block" after tx commit ;"sync" after CheckTx ; "async" right
+	 *            away ;
+	 * @return
+	 */
+	public void submit(Message message, String feeAmount, String gas, String memo, String mode) {
+		List<Token> amountList = null;
+		Token amount = null;
+		Fee fee = null;
+		Message[] msgs = null;
+		Data2Sign data = null;
+		Signature signature = null;
+		BoardcastTx cosmosTransaction = null;
+		TxValue cosmosTx = null;
+		List<Signature> signatureList = null;
+		try {
+			amountList = new ArrayList<Token>();
+			if (feeAmount.length() > 0) {
+				amount = new Token();
+				amount.setDenom(EnvInstance.getEnv().GetDenom());
+				amount.setAmount(feeAmount);
+				amountList.add(amount);
+			}
 
-            cosmosTx.setMemo(memo);
+			// 组装待签名交易结构
+			fee = new Fee();
+			fee.setAmount(amountList);
+			fee.setGas(gas);
 
-            List<Signature> signatureList = new ArrayList<>();
-            signatureList.add(signature);
-            cosmosTx.setSignatures(signatureList);
+			msgs = new Message[1];
+			msgs[0] = message;
 
-            cosmosTransaction.setTx(cosmosTx);
+			data = new Data2Sign(accountNum, EnvInstance.getEnv().GetChainid(), fee, memo, msgs, sequenceNum);
 
-            boardcast(cosmosTransaction.toJson());
-        } catch (Exception e) {
-            System.out.println("serialize transfer msg failed");
-        }
-    }
+			signature = MsgBase.sign(data, priKeyString);
 
-    void initMnemonic(String mnemonic) {
-        String prikey = Crypto.generatePrivateKeyFromMnemonic(mnemonic);
-        init(prikey);
-    }
+			cosmosTransaction = new BoardcastTx();
+			if (StringUtils.isBlank(mode)) {
+				cosmosTransaction.setMode(EnvInstance.getEnv().GetTxModeBlock());
+			}
 
+			cosmosTx = new TxValue();
+			cosmosTx.setType(EnvInstance.getEnv().GetTxTypeStdTx());
+			cosmosTx.setMsgs(msgs);
 
-    void init(String privateKey) {
-        pubKeyString = Hex.toHexString(Crypto.generatePubKeyFromPriv(privateKey));
-        address = Crypto.generateAddressFromPriv(privateKey);
-        JSONObject accountJson = JSON.parseObject(getAccountPrivate(address));
-        sequenceNum = getSequance(accountJson);
-        accountNum = getAccountNumber(accountJson);
-        priKeyString = privateKey;
+			if (EnvInstance.getEnv().HasFee()) {
+				cosmosTx.setFee(fee);
+			}
 
-        operAddress = Crypto.generateValidatorAddressFromPub(pubKeyString);
-    }
+			cosmosTx.setMemo(memo);
 
-    public String getOperAddress() {
-        return operAddress;
-    }
+			signatureList = new ArrayList<Signature>();
+			signatureList.add(signature);
+			cosmosTx.setSignatures(signatureList);
 
-    private String getAccountPrivate(String userAddress) {
-        String url = restServerUrl + EnvInstance.getEnv().GetRestPathPrefix() + Constants.COSMOS_ACCOUNT_URL_PATH + userAddress;
-        System.out.println(url);
-        return HttpUtils.httpGet(url);
-    }
+			cosmosTransaction.setTx(cosmosTx);
 
-    private String getSequance(JSONObject account) {
-        String res = (String) account
-//                .getJSONObject("result")
-                .getJSONObject("value")
-                .get("sequence");
-        return res;
-    }
+			boardcast(cosmosTransaction.toJson());
+		} catch (Exception e) {
+			System.out.println("serialize transfer msg failed");
+		}
+	}
 
-    private String getAccountNumber(JSONObject account) {
-        String res = (String) account
-//                .getJSONObject("result")
-                .getJSONObject("value")
-                .get("account_number");
-        return res;
-    }
+	/**
+	 * 助记码派生用户
+	 * 
+	 * @param mnemonic
+	 */
+	public void initMnemonic(String mnemonic) {
+		String prikey = Crypto.generatePrivateKeyFromMnemonic(mnemonic, EnvInstance.getEnv().GetPassphrase());
+		init(prikey);
+	}
 
-    protected JSONObject boardcast(String tx) {
-        System.out.println("Boardcast tx:");
-        System.out.println(tx);
+	/**
+	 * 助记码派生用户
+	 * 
+	 * @param mnemonic
+	 *            助记码派生用户
+	 * @param passphrase
+	 *            密码
+	 */
+	public void initMnemonicpPassphrase(String mnemonic, String passphrase) {
+		String prikey = Crypto.generatePrivateKeyFromMnemonic(mnemonic, passphrase);
+		init(prikey);
+	}
 
-        System.out.println("Response:");
-        String res = HttpUtils.httpPost(restServerUrl + EnvInstance.getEnv().GetTxUrlPath(), tx);
-        JSONObject result = JSON.parseObject(res);
+	/**
+	 * 私钥派生用户
+	 * 
+	 * @param privateKey
+	 *            私钥
+	 */
+	public void initPrivateKey(String privateKey) {
+		init(privateKey);
+	}
 
-        System.out.println(result);
-        System.out.println("------------------------------------------------------");
-        return result;
-    }
+	void init(String privateKey) {
+		pubKeyString = Hex.toHexString(Crypto.generatePubKeyFromPriv(privateKey));
+		accountAddress = Crypto.generateAccountAddressFromPriv(privateKey);
+		JSONObject accountJson = JSON.parseObject(getAccountPrivate(accountAddress));
+		sequenceNum = getSequance(accountJson);
+		accountNum = getAccountNumber(accountJson);
+		priKeyString = privateKey;
+		validatorAddress = Crypto.generateValidatorAddressFromPub(pubKeyString);
+		consensusAddress = Crypto.generateConsensusAddressFromPub(pubKeyString);
 
+	}
+
+	/**
+	 * 获取Validator地址
+	 * 
+	 * @return
+	 */
+	public String getValidatorAddress() {
+		return validatorAddress;
+	}
+
+	/**
+	 * 获取Account地址
+	 * 
+	 * @return
+	 */
+	public String getAccountAddress() {
+		return accountAddress;
+	}
+
+	/**
+	 * 获取consensus地址
+	 * 
+	 * @return
+	 */
+	public String getConsensusAddress() {
+		return consensusAddress;
+	}
+
+	private String getAccountPrivate(String userAddress) {
+		StringBuilder url = null;
+		url = new StringBuilder();
+		url.append(restServerUrl);
+		url.append(EnvInstance.getEnv().GetRestPathPrefix());
+		url.append(Constants.COSMOS_ACCOUNT_URL_PATH);
+		url.append(userAddress);
+		System.out.println(url.toString());
+		return HttpUtils.httpGet(url.toString());
+	}
+
+	private String getSequance(JSONObject account) {
+		Integer res = account.getJSONObject("result").getJSONObject("value").getInteger("sequence");
+		return res.toString();
+	}
+
+	private String getAccountNumber(JSONObject account) {
+		Integer res = account.getJSONObject("result").getJSONObject("value").getInteger("account_number");
+		return res.toString();
+	}
+
+	protected JSONObject boardcast(String tx) {
+		System.out.println("Boardcast tx:");
+		System.out.println(tx);
+
+		System.out.println("Response:");
+		String res = HttpUtils.httpPost(restServerUrl + EnvInstance.getEnv().GetTxUrlPath(), tx);
+		JSONObject result = JSON.parseObject(res);
+
+		System.out.println(result);
+		System.out.println("------------------------------------------------------");
+		return result;
+	}
 
 }

@@ -9,40 +9,38 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 @JsonPropertyOrder(alphabetic = true)
 public class Token {
 
-    private String amount;
+	private String amount;
 
-    private String denom;
+	private String denom;
 
-    public Token() {
+	public Token() {
 
-    }
+	}
 
-    public Token(String amount, String denom) {
-        this.amount = amount;
-        this.denom = denom;
-    }
+	public Token(String amount, String denom) {
+		this.amount = amount;
+		this.denom = denom;
+	}
 
-    public String getDenom() {
-        return denom;
-    }
+	public String getDenom() {
+		return denom;
+	}
 
-    public void setDenom(String denom) {
-        this.denom = denom;
-    }
+	public void setDenom(String denom) {
+		this.denom = denom;
+	}
 
-    public String getAmount() {
-        return amount;
-    }
+	public String getAmount() {
+		return amount;
+	}
 
-    public void setAmount(String amount) {
-        this.amount = amount;
-    }
+	public void setAmount(String amount) {
+		this.amount = amount;
+	}
 
-    @Override
-    public String toString() {
-        return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
-            .append("amount", amount)
-            .append("denom", denom)
-            .toString();
-    }
+	@Override
+	public String toString() {
+		return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE).append("amount", amount)
+				.append("denom", denom).toString();
+	}
 }

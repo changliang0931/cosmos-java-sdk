@@ -3,6 +3,7 @@ package io.cosmos.exception;
 /**
  * BadURLException wraps errors due to malformed URLs.
  */
+@SuppressWarnings("serial")
 public class BadURLException extends CosmosException {
   /**
    * Initializes exception with its message attribute.

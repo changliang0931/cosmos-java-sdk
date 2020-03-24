@@ -1,48 +1,49 @@
 package io.cosmos.types;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
-import org.omg.CORBA.PUBLIC_MEMBER;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+
+import io.cosmos.common.Constants;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonPropertyOrder(alphabetic = true)
 public class Pubkey {
 
-    public Pubkey() {
+	public Pubkey() {
 
-    }
-    public Pubkey(String value) {
-        this.type = "tendermint/PubKeySecp256k1";
-        this.value = value;
-    }
+	}
 
-    private String type;
+	public Pubkey(String value) {
+		this.type = Constants.COSMOS_PUBKEY_TYPE;
+		this.value = value;
+	}
 
-    private String value;
+	private String type;
 
-    public void setType(String type) {
-        this.type = type;
-    }
+	private String value;
 
-    public void setValue(String value) {
-        this.value = value;
-    }
+	public void setType(String type) {
+		this.type = type;
+	}
 
-    public String getType() {
-        return type;
-    }
+	public void setValue(String value) {
+		this.value = value;
+	}
 
-    public String getValue() {
-        return value;
-    }
+	public String getType() {
+		return type;
+	}
 
-    @Override
-    public String toString() {
-        return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
-            .append("type", type)
-            .append("value", value)
-            .toString();
-    }
+	public String getValue() {
+		return value;
+	}
+
+	@Override
+	public String toString() {
+		return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE).append("type", type).append("value", value)
+				.toString();
+	}
 }

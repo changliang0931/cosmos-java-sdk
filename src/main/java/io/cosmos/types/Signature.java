@@ -11,33 +11,31 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 @JsonPropertyOrder(alphabetic = true)
 public class Signature {
 
-    @JsonProperty("pub_key")
-    @SerializedName("pub_key")
-    private Pubkey pubkey;
+	@JsonProperty("pub_key")
+	@SerializedName("pub_key")
+	private Pubkey pubkey;
 
-    private String signature;
+	private String signature;
 
-    public Pubkey getPubkey() {
-        return pubkey;
-    }
+	public Pubkey getPubkey() {
+		return pubkey;
+	}
 
-    public String getSignature() {
-        return signature;
-    }
+	public String getSignature() {
+		return signature;
+	}
 
-    public void setPubkey(Pubkey pubkey) {
-        this.pubkey = pubkey;
-    }
+	public void setPubkey(Pubkey pubkey) {
+		this.pubkey = pubkey;
+	}
 
-    public void setSignature(String signature) {
-        this.signature = signature;
-    }
+	public void setSignature(String signature) {
+		this.signature = signature;
+	}
 
-    @Override
-    public String toString() {
-        return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
-            .append("pub_key", pubkey)
-            .append("signature", signature)
-            .toString();
-    }
+	@Override
+	public String toString() {
+		return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE).append("pub_key", pubkey)
+				.append("signature", signature).toString();
+	}
 }

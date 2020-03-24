@@ -1,6 +1,6 @@
 package io.cosmos.common;
 
-public class Constants {
+public class ConstantsProd {
 	/**
 	 * 查询账户 rest path
 	 */
@@ -13,7 +13,6 @@ public class Constants {
 	 * 默认gas
 	 */
 	public static String COSMOS_DEFAULT_GAS = "200000";
-	
 	/**
 	 * 默认passphrase
 	 */
@@ -55,7 +54,7 @@ public class Constants {
 	// BIP44Prefix is the parts of the BIP44 HD path that are fixed by
 	// what we used during the fundraiser.
 	public static String FullFundraiserPath = "M/44H/118H/0H/0/0";
-	
+
 	public static String Bech32MainPrefix = "cosmos";
 	public static String Bech32PubKeyTypeAccPub = "accpub";
 	public static String Bech32PubKeyTypeValPub = "valpub";

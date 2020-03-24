@@ -1,11 +1,12 @@
 package io.cosmos.msg;
 
+import io.cosmos.common.Constants;
 import io.cosmos.common.EnvInstance;
 import io.cosmos.msg.utils.*;
 import io.cosmos.msg.utils.type.MsgDelegateValue;
 import io.cosmos.types.*;
 
-
+@SuppressWarnings("rawtypes")
 public class MsgDelegate extends MsgBase {
 
     public static void main(String[] args) {
@@ -18,23 +19,23 @@ public class MsgDelegate extends MsgBase {
 
         msg.submit(message,
                 "3",
-                "200000",
-                "Delegate memo");
+                Constants.COSMOS_DEFAULT_GAS,
+                "Delegate memo","");
     }
 
 
     protected Message produceDelegateMsg(String delegateDenom, String delegateAmount) {
 
-        String validatorAddress = this.operAddress;
+        String validatorAddress = this.validatorAddress;
         MsgDelegateValue delegateValue = new MsgDelegateValue();
         delegateValue.setValidatorAddress(validatorAddress);
-        delegateValue.setDelegatorAddress(address);
+        delegateValue.setDelegatorAddress(accountAddress);
         //amount
         Token token = new Token();
         token.setDenom(delegateDenom);
         token.setAmount(delegateAmount);
         delegateValue.setAmount(token);
-        Message<MsgDelegateValue> messageDelegateMulti = new Message<>();
+        Message<MsgDelegateValue> messageDelegateMulti = new Message<MsgDelegateValue>();
         messageDelegateMulti.setType(msgType);
         messageDelegateMulti.setValue(delegateValue);
         return messageDelegateMulti;
