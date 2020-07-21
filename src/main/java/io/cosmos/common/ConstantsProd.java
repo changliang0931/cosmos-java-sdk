@@ -44,18 +44,18 @@ public class ConstantsProd {
 	/**
 	 * chain id
 	 */
-	public static String COSMOS_CHAIN_ID = "changliangNb";
+	public static String COSMOS_CHAIN_ID = "Jubiter";
 
 	/**
 	 * 默认代币符号 denom
 	 */
-	public static String COSMOS_DEFAULT_DENOM = "denom";
+	public static String COSMOS_DEFAULT_DENOM = "nametoken";
 
 	// BIP44Prefix is the parts of the BIP44 HD path that are fixed by
 	// what we used during the fundraiser.
 	public static String FullFundraiserPath = "M/44H/118H/0H/0/0";
 
-	public static String Bech32MainPrefix = "cosmos";
+	public static String Bech32MainPrefix = "ftsafe";
 	public static String Bech32PubKeyTypeAccPub = "accpub";
 	public static String Bech32PubKeyTypeValPub = "valpub";
 	public static String Bech32PubKeyTypeConsPub = "conspub";

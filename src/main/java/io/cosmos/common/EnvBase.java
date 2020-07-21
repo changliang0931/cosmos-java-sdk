@@ -29,6 +29,10 @@ public class EnvBase {
 	public String GetAccountAddrPrefix() {
 		return Constants.Bech32PrefixAccAddr;
 	}
+	
+	public String GetAccountPubKeyPrefix() {
+		return Constants.Bech32PrefixAccPub;
+	}
 
 	public String GetConsensusAddrPrefix() {
 		return Constants.Bech32PrefixConsAddr;

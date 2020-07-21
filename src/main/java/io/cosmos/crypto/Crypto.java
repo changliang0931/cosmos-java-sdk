@@ -21,6 +21,8 @@ import org.bitcoinj.wallet.UnreadableWalletException;
 import org.bouncycastle.util.encoders.DecoderException;
 import org.bouncycastle.util.encoders.Hex;
 
+import com.google.crypto.tink.subtle.Bech32;
+
 import io.cosmos.common.Constants;
 import io.cosmos.common.EnvInstance;
 import io.cosmos.crypto.encode.ConvertBits;
@@ -89,6 +91,11 @@ public class Crypto {
 		return k.getPublicKeyAsHex();
 	}
 
+	public static byte[] generatePubKeyByteFromPriv(String privateKey) {
+		ECKey k = ECKey.fromPrivate(new BigInteger(privateKey, 16));
+		return k.getPubKey();
+	}
+
 	/**
 	 * 随机生成助记码
 	 * 
@@ -150,7 +157,7 @@ public class Crypto {
 	public static boolean validateSig(byte[] msg, String pubKey, String sig) throws NoSuchAlgorithmException {
 		return validateSig(msg, Base64.getDecoder().decode(pubKey), Base64.getDecoder().decode(sig));
 	}
-    
+
 	public static byte[] generatePubKeyFromPriv(String privateKey) {
 		ECKey k = ECKey.fromPrivate(new BigInteger(privateKey, 16));
 		return k.getPubKey();
@@ -265,10 +272,8 @@ public class Crypto {
 	public static String generatePubkeyBech32FromPubKey(String pubkeyType, String pubKey) {
 		String bech32Pubkey = "";
 		try {
-			System.out.println("dddddddddd" + Utils.HEX.decode(pubKey));
-			System.out.println("dddddddddd" + Utils.HEX.decode(pubKey).length);
-			byte[] pubkeyByte = ConvertBits.convertBits(Utils.HEX.decode(pubKey), 0, Utils.HEX.decode(pubKey).length, 8,
-					5, true);
+			byte[] pubkeyByte = ConvertBits.convertBits(Bech32.decode(pubKey).getData(), 0,
+					Bech32.decode(pubKey).getData().length, 8, 5, true);
 
 			String bech32PubkeyPrefix = Constants.Bech32PrefixAccAddr;
 			if (Constants.Bech32PubKeyTypeAccPub.equals(pubkeyType)) {

@@ -14,8 +14,7 @@ public class AddressUtil {
 	public static String createNewAddressSecp256k1(String mainPrefix, byte[] publickKey) throws Exception {
 		String addressResult = null;
 		try {
-			byte[] pubKeyHash = sha256Hash(publickKey, 0, publickKey.length);
-			byte[] address = Ripemd.ripemd160(pubKeyHash);
+			byte[] address = getPubkeyValue(publickKey);
 			byte[] bytes = encode(0, address);
 			addressResult = io.cosmos.crypto.encode.Bech32.encode(mainPrefix, bytes);
 		} catch (Exception e) {

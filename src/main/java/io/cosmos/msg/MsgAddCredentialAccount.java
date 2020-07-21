@@ -8,12 +8,12 @@ public class MsgAddCredentialAccount extends MsgBase {
 	public static final String MsgType_AddCredentialAccountMsg = "/credential/AddCredentialAccount";
 
 	public static void main(String[] args) {
-		String mnmonic = "position goat estate hamster wash lunar alpha sword pledge basic wool special sand peanut father cactus adjust theme gossip laptop lift chef increase position";
+		String mnmonic = "steak wave round rapid tobacco thrive mixture reopen teach priority horse fire leader enact tunnel south crane execute any satisfy merge obscure coach sort";
 		MsgAddCredentialAccount msg = new MsgAddCredentialAccount();
 		msg.setMsgType(MsgType_AddCredentialAccountMsg);
 		msg.initMnemonic(mnmonic);
-		String pubkey = "cosmospub1addwnpepq0pq44g2rc25lthwmx629cztakn7f9st307zu9l7234mjdsxwfz4u5qme0s";
-		String creator = "cosmos1mr95mmyu02z9envmzty5q9u4kc4qmv73e5jr8v";
+		String pubkey = "cosmospub1addwnpepqfwzcuyexm53tlrgz5cj36s90q8426r8fvra430klpsljy4lmeg3yfakce9";
+		String creator = "cosmos16sp5jh9arl579q7hzcct24er7qy2qy9pu6c2ax";
 		Message<MsgAddCredentialAccountValue> messages = msg.addCredentialMsg(pubkey, creator);
 //		msg.getSignTx(messages, "", Constants.COSMOS_DEFAULT_GAS, "","");
 		msg.submit(messages, "", Constants.COSMOS_DEFAULT_GAS, "","");

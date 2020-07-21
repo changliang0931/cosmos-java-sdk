@@ -8,18 +8,18 @@ public class MsgAddCredential extends MsgBase {
 	public static final String MsgType_AddCredentialMsg = "/credential/AddCredential";
 
 	public static void main(String[] args) {
-		String mnmonic = "position goat estate hamster wash lunar alpha sword pledge basic wool special sand peanut father cactus adjust theme gossip laptop lift chef increase position";
+		String mnmonic = "wolf thumb intact fantasy cave lonely barely setup dress life invest kingdom potato apple iron sentence sense paddle then ability minimum attract pottery glue";
 		MsgAddCredential msg = new MsgAddCredential();
 		msg.setMsgType(MsgType_AddCredentialMsg);
 		msg.initMnemonic(mnmonic);
-		String hash = "credential.111hash111";
-		String path = "credential.path";
-		String time = "credential.time";
-		String name = "credential.name";
-		String owner = "cosmos1mr95mmyu02z9envmzty5q9u4kc4qmv73e5jr8v";
+		String hash = "c46532aa8d83a453ab0cfc4c247c3f75c1d7a9724bf3db034c9ddca5cf732cc6";
+		String path = "url is null";
+		String time = "1594706001510";
+		String name = "c46532aa8d83a453ab0cfc4c247c3f75c1d7a9724bf3db034c9ddca5cf732cc6";
+		String owner = "ftsafe1d3wjggvjhf79q72m92qyaddh0fhjhjvpyzcwgy";
 		Message<MsgAddCredentialValue> messages = msg.addCredentialMsg(hash, path, time, name, owner);
-		msg.getSignTx(messages, "", Constants.COSMOS_DEFAULT_GAS, "","");
-//		msg.submit(messages, "", Constants.COSMOS_DEFAULT_GAS, "","");
+//		msg.getSignTx(messages, "", Constants.COSMOS_DEFAULT_GAS, "","");
+		msg.submit(messages, "", "200000", "","");
 	}
 
 	public Message<MsgAddCredentialValue> addCredentialMsg(String hash, String path, String time, String name,
